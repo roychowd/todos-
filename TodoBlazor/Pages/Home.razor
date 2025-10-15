@@ -7,38 +7,117 @@
 <PageTitle>Todo List</PageTitle>
 
 <div class="container mt-4">
-    <h2>Todo List</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Todo List</h2>
+        <div class="d-flex justify-content-end" style="gap: 10px;">
+            <button type="button" class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/add-todo"))">Add
+                Todo</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ClearFiltersAsync">
+                Clear Filters
+            </button>
+        </div>
+    </div>
+
+    <div class="card-header">
+        <h5 class="mb-0">
+            <p>Filters</p>
+
+        </h5>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2">
+            <label class="form-label">Title Contains:</label>
+            <input type="text" class="form-control" @bind="_filterTitle" @bind:after="OnFilterChangedAsync"
+                placeholder="Search title" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Status:</label>
+            <select class="form-select" @bind="_filterIsCompleted" @bind:after="OnFilterChangedAsync">
+                <option value="">All</option>
+                <option value="false">Not Completed</option>
+                <option value="true">Completed</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Due From:</label>
+            <input type="date" class="form-control" @bind="_filterDueFrom" @bind:after="OnFilterChangedAsync" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Due To:</label>
+            <input type="date" class="form-control" @bind="_filterDueTo" @bind:after="OnFilterChangedAsync" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Created From:</label>
+            <input type="date" class="form-control" @bind="_filterCreatedFrom" @bind:after="OnFilterChangedAsync" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Created To:</label>
+            <input type="date" class="form-control" @bind="_filterCreatedTo" @bind:after="OnFilterChangedAsync" />
+        </div>
+
+    </div>
 
 
-    <button type="button" class="btn btn-primary w-100 mb-3" @onclick="@(() => Navigation.NavigateTo("/add-todo"))">
-        <i class="bi bi-plus-circle me-2"></i>Add Todo
-    </button>
+    <div class="row mt-2 mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Sort By:</label>
+            <select class="form-select" @bind="_currentSortBy" @bind:after="OnSortChangedAsync">
+                <option value="createdAt">Created Date</option>
+                <option value="dueDate">Due Date</option>
+                <option value="title">Title</option>
+                <option value="isCompleted">Completion Status</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Order:</label>
+            <select class="form-select" @bind="_currentSortOrder" @bind:after="OnSortChangedAsync">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+        </div>
+    </div>
 
-    @if (isLoading)
+    @if (_isLoading)
     {
         <div class="text-center my-5">
             <div class="spinner-border"></div>
         </div>
     }
-    else if (todos.Any())
+    else if (_todos.Any())
     {
+        <div class="d-flex  mb-2">
+            <span class="text-muted">Showing @_todos.Count todo(s)</span>
+        </div>
         <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th>Title</th>
+                        <th>
+                            Title
+                        </th>
                         <th>Description</th>
-                        <th>Due Date</th>
-                        <th>Completed</th>
+                        <th>
+                            Created At
+                        </th>
+                        <th>
+                            Due Date
+                        </th>
+                        <th>
+                            Completed
+                        </th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var todo in todos.OrderBy(t => t.IsCompleted).ThenBy(t => t.DueDate))
+                    @* todos list *@
+                    @foreach (var todo in _todos)
                     {
-                        <tr class="@(todo.IsCompleted ? "table-light" : "")">
+                        <tr>
                             <td>@todo.Title</td>
-                            <td class="text-wrap text-break text-truncate ellipses" style="max-width: 200px;">@todo.Description</td>
+                            <td class="text-wrap text-break text-truncate ellipses" style="max-width: 200px;">@todo.Description
+                            </td>
+                            <td>@todo.CreatedAt.ToString("yyyy-MM-dd")</td>
                             <td>@(todo.DueDate.HasValue? todo.DueDate.Value.ToString("yyyy-MM-dd") : "-")</td>
                             <td>
                                 @if (todo.IsCompleted)
@@ -51,10 +130,9 @@
                                 }
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-info" @onclick="@(() => ViewTodo(todo))">View</button>
-                                <button class="btn btn-sm btn-warning" @onclick="@(() => EditTodo(todo.Id))">Edit</button>
-                                <button class="btn btn-sm btn-danger" @onclick="@(() => DeleteTodo(todo.Id))"
-                                    disabled="@isDeleting">Delete</button>
+                                <button class="btn btn-sm btn-info" @onclick="@(() => ViewTodoAsync(todo))">View</button>
+                                <button class="btn btn-sm btn-warning" @onclick="@(() => EditTodoAsync(todo.Id))">Edit</button>
+                                <button class="btn btn-sm btn-danger" @onclick="@(() => DeleteTodoAsync(todo.Id))">Delete</button>
                             </td>
                         </tr>
                     }
@@ -65,58 +143,84 @@
     else
     {
         <div class="text-center text-muted my-5">
-            <i class="bi bi-inbox display-4"></i>
             <p class="mt-2">No todos yet.</p>
         </div>
     }
 </div>
 
 @code {
-    private List<TodoItem> todos = new();
-    private bool isLoading = true;
-    private bool isDeleting = false;
+    private List<TodoItem> _todos = new();
+    private bool _isLoading = true;
+    private bool _isDeleting = false;
+    // sorting
+    private string _currentSortBy = "createdAt";
+    private string _currentSortOrder = "asc";
+    // filtering
+    private string? _filterTitle;
+    private bool? _filterIsCompleted;
+    private DateTime? _filterDueFrom;
+    private DateTime? _filterDueTo;
+    private DateTime? _filterCreatedFrom;
+    private DateTime? _filterCreatedTo;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadTodos();
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        // Reload data when returning to the page
-        await LoadTodos();
-    }
-
     private async Task LoadTodos()
     {
-        isLoading = true;
+        _isLoading = true;
         try
         {
-            todos = await TodoService.GetAll();
+            if (_filterIsCompleted.HasValue)
+            {
+                _filterIsCompleted = _filterIsCompleted.Value;
+            }
+
+            _todos = await TodoService.GetAll(
+            isCompleted: _filterIsCompleted,
+            dueFrom: _filterDueFrom,
+            dueTo: _filterDueTo,
+            createdFrom: _filterCreatedFrom,
+            createdTo: _filterCreatedTo,
+            title: string.IsNullOrWhiteSpace(_filterTitle) ? null : _filterTitle,
+            sortBy: _currentSortBy,
+            sortOrder: _currentSortOrder
+            );
         }
         finally
         {
-            isLoading = false;
+            _isLoading = false;
         }
     }
 
-
-    private async Task ToggleComplete(TodoItem todo)
+    private async Task OnSortChangedAsync()
     {
-        todo.IsCompleted = !todo.IsCompleted;
-        try
-        {
-            await TodoService.Update(todo);
-        }
-        catch
-        {
-            todo.IsCompleted = !todo.IsCompleted;
-        }
+        await LoadTodos();
     }
 
-    private async Task DeleteTodo(Guid id)
+    private async Task OnFilterChangedAsync()
     {
-        isDeleting = true;
+        await LoadTodos();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        _filterTitle = null;
+        _filterIsCompleted = null;
+        _filterDueFrom = null;
+        _filterDueTo = null;
+        _filterCreatedFrom = null;
+        _filterCreatedTo = null;
+        _filterTitle = null;
+        _filterIsCompleted = null;
+        await LoadTodos();
+    }
+
+    private async Task DeleteTodoAsync(Guid id)
+    {
+        _isDeleting = true;
         try
         {
             await TodoService.Delete(id);
@@ -124,17 +228,17 @@
         }
         finally
         {
-            isDeleting = false;
+            _isDeleting = false;
         }
     }
 
-    private void ViewTodo(TodoItem todo)
+    private void ViewTodoAsync(TodoItem todo)
     {
         Navigation.NavigateTo($"/details/{todo.Id}");
     }
 
-    private void EditTodo(Guid id)
+    private void EditTodoAsync(Guid id)
     {
         Navigation.NavigateTo($"/edit-todo/{id}");
     }
-}
+} 

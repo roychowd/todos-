@@ -9,7 +9,7 @@ using System.ComponentModel.DataAnnotations;
 // is completed - a boolean default is false
 // created at - a date default is the current date
 
-namespace TodoApp.Models
+namespace TodoApi.Models
 {
     public class TodoItem
     {

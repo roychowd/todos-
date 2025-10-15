@@ -1,5 +1,5 @@
-// edit todo page that allows you to edit the todo item and save it and redirect to the details page
 @page "/edit-todo/{Id:guid}"
+
 @using TodoApp.Models
 @using TodoBlazor.Services
 @inject ITodoService TodoService
@@ -13,9 +13,7 @@
     @if (isLoading)
     {
         <div class="text-center my-5">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+            <span>Loading...</span>
         </div>
     }
     else
@@ -42,14 +40,8 @@
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1" disabled="@isSaving">
-                    @if (isSaving)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    }
-                    Save Changes
-                </button>
-                <button type="button" class="btn btn-secondary" @onclick="@(() => Navigation.NavigateTo("/"))">
+                <button type="submit" class="btn btn-primary flex-grow-1">Save Changes</button>
+                <button type="button" class="btn btn-secondary" @onclick="@OnCancel">
                     Cancel
                 </button>
             </div>
@@ -62,7 +54,6 @@
     public Guid Id { get; set; }
     private TodoItem todo = new();
     private bool isLoading = true;
-    private bool isSaving = false;
     
     protected override async Task OnInitializedAsync()
     {
@@ -78,15 +69,24 @@
 
     private async Task EditTodoAsync()
     {
-        isSaving = true;
         try
         {
             await TodoService.Update(todo);
             Navigation.NavigateTo("/");
         }
-        finally
+        catch
         {
-            isSaving = false;
+            Console.WriteLine("Error updating todo");
         }
+    }
+
+    private void OnError(Exception ex)
+    {
+        Console.WriteLine("Error updating todo");
+    }
+
+    private void OnCancel()
+    {
+        Navigation.NavigateTo("/");
     }
 }

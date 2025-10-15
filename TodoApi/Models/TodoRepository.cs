@@ -1,14 +1,14 @@
 using System.Text.Json;
 
-namespace TodoApp.Models
+namespace TodoApi.Models
 {
     public class TodoRepository
     {
-        private readonly string filePath = "App_Data/todos_data.json";
+        private const string FilePath = "App_Data/todos_data.json";
 
         public TodoRepository()
         {
-            var directory = Path.GetDirectoryName(filePath);
+            var directory = Path.GetDirectoryName(FilePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 //  create directory
                 Directory.CreateDirectory(directory);
@@ -16,13 +16,18 @@ namespace TodoApp.Models
 
         private List<TodoItem> Load()
         {
-            if (!File.Exists(filePath))
+            if (!File.Exists(FilePath))
                 return new List<TodoItem>();
 
             try
             {
-                var json = File.ReadAllText(filePath);
-                return JsonSerializer.Deserialize<List<TodoItem>>(json) ?? new List<TodoItem>();
+                var json = File.ReadAllText(FilePath);
+                //  if list is empty then we need to return an empty list
+                if (string.IsNullOrEmpty(json))
+                    return new List<TodoItem>();
+
+                var todos = JsonSerializer.Deserialize<List<TodoItem>>(json) ?? new List<TodoItem>();
+                return todos;
             }
             catch
             {
@@ -33,7 +38,7 @@ namespace TodoApp.Models
         private void Save(List<TodoItem> todos)
         {
             var json = JsonSerializer.Serialize(todos, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(filePath, json);
+            File.WriteAllText(FilePath, json);
         }
 
         public List<TodoItem> GetAll() => Load();
@@ -62,27 +67,6 @@ namespace TodoApp.Models
         {
             var todos = Load().Where(t => t.Id != id).ToList();
             Save(todos);
-        }
-        public void setToCompleted(Guid id)
-        {
-            var todos = Load();
-            var index = todos.FindIndex(t => t.Id == id);
-            if (index != -1)
-            {
-                todos[index].IsCompleted = true;
-                Save(todos);
-            }
-        }
-
-        public void setToInProgress(Guid id)
-        {
-            var todos = Load();
-            var index = todos.FindIndex(t => t.Id == id);
-            if (index != -1)
-            {
-                todos[index].IsCompleted = false;
-                Save(todos);
-            }
         }
     }
 }

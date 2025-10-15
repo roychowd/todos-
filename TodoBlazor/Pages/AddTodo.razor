@@ -12,45 +12,42 @@
     <form @onsubmit="AddTodoAsync">
         <div>
             <label class="form-label">Title *</label>
-            <input class="form-control" @bind="newTodo.Title" placeholder="Enter title" required maxlength="100" />
+            <input class="form-control" @bind="_newTodo.Title" placeholder="Enter title" required maxlength="100" />
         </div>
         <div>
             <label class="form-label">Due Date</label>
-            <input type="date" class="form-control" @bind="newTodo.DueDate" />
+            <input type="date" class="form-control" @bind="_newTodo.DueDate" />
         </div>
         <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea class="form-control" @bind="newTodo.Description" placeholder="Optional"></textarea>
+            <textarea class="form-control" @bind="_newTodo.Description" placeholder="Optional"></textarea>
         </div>
-        <button type="submit" class="btn btn-primary w-100 mt-3" disabled="@isAdding">
-            @if (isAdding)
-            {
-                <span class="spinner-border spinner-border-sm me-1"></span>
-            }
-            Add
-        </button>
+        <button type="submit" class="btn btn-primary w-100 mt-3">Add</button>
+        <button type="button" class="btn btn-secondary w-100 mt-3" @onclick="@OnCancel">Cancel</button>
     </form>
 </div>
 
 @code {
-    private TodoItem newTodo = new();
-    private bool isAdding = false;
+    readonly TodoItem _newTodo = new();
 
     private async Task AddTodoAsync()
     {
-        if (string.IsNullOrWhiteSpace(newTodo.Title)) return;
+        if (string.IsNullOrWhiteSpace(_newTodo.Title)) return;
 
-        isAdding = true;
         try
         {
-            await TodoService.Add(newTodo);
-            // Navigate back to home page after successful add
+            await TodoService.Add(_newTodo);
             Navigation.NavigateTo("/");
         }
-        finally
+        catch
         {
-            isAdding = false;
+            Console.WriteLine("Error adding todo");
         }
+    }
+
+    private void OnCancel()
+    {
+        Navigation.NavigateTo("/");
     }
 
 }
