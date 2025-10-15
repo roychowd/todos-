@@ -470,4 +470,202 @@ public class TodoControllerTests
         Assert.NotNull(returnedTodos);
         Assert.Equal(3, returnedCount);
     }
+
+    [Fact]
+    public void GetAll_WithCreatedDateThisWeekFilter_ReturnsCorrectItems()
+    {
+        // Arrange
+        var now = DateTime.Now;
+        var startOfWeek = now.AddDays(-(int)now.DayOfWeek); // Sunday
+        var endOfWeek = startOfWeek.AddDays(7).AddTicks(-1); // Saturday 23:59:59
+
+        var todoItems = new List<TodoItem>();
+        var random = new Random();
+
+        for (int i = 0; i < 100; i++)
+        {
+            todoItems.Add(new TodoItem
+            {
+                Id = Guid.NewGuid(),
+                Title = $"Todo {i + 1}",
+                CreatedAt = now.AddDays(random.Next(-30, 7)) 
+            });
+        }
+
+        _todoRepositoryMock.Setup(repo => repo.GetAll()).Returns(todoItems);
+
+        var result = _todoController.GetAll(createdFrom: startOfWeek, createdTo: endOfWeek);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var responseData = okResult.Value;
+        var propertyInfo = responseData?.GetType().GetProperty("data");
+        var returnedTodos = propertyInfo?.GetValue(responseData) as List<TodoItem>;
+        
+        Assert.NotNull(returnedTodos);
+        Assert.All(returnedTodos, t =>
+            Assert.InRange(t.CreatedAt, startOfWeek, endOfWeek)
+        );
+
+        var expectedCount = todoItems.Count(t => t.CreatedAt >= startOfWeek && t.CreatedAt <= endOfWeek);
+        var countInfo = responseData?.GetType().GetProperty("count");
+        var returnedCount = countInfo?.GetValue(responseData);
+        Assert.Equal(expectedCount, returnedCount);
+    }
+
+    [Fact]
+    public void GetAll_WithDueDateThisWeekFilter_ReturnsCorrectItems()
+    {
+        // Arrange
+        var now = DateTime.Now;
+        var startOfWeek = now.AddDays(-(int)now.DayOfWeek);
+        var endOfWeek = startOfWeek.AddDays(7).AddTicks(-1); 
+
+        var todoItems = new List<TodoItem>();
+        var random = new Random();
+
+
+        for (int i = 0; i < 100; i++)
+        {
+            todoItems.Add(new TodoItem
+            {
+                Id = Guid.NewGuid(),
+                Title = $"Todo {i + 1}",
+                CreatedAt = now.AddDays(random.Next(-30, 7)), 
+                DueDate = now.AddDays(random.Next(-30, 7))
+            });
+        }
+
+        _todoRepositoryMock.Setup(repo => repo.GetAll()).Returns(todoItems);
+
+        var result = _todoController.GetAll(dueFrom: startOfWeek, dueTo: endOfWeek);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var responseData = okResult.Value;
+        var propertyInfo = responseData?.GetType().GetProperty("data");
+        var returnedTodos = propertyInfo?.GetValue(responseData) as List<TodoItem>;
+        
+        Assert.NotNull(returnedTodos);
+        Assert.All(returnedTodos, t => {
+            Assert.NotNull(t.DueDate);
+            Assert.InRange(t.DueDate.Value, startOfWeek, endOfWeek);
+        });
+        
+        var expectedCount = todoItems.Count(t => t.DueDate >= startOfWeek && t.DueDate <= endOfWeek);
+        var countInfo = responseData?.GetType().GetProperty("count");
+        var returnedCount = countInfo?.GetValue(responseData);
+        Assert.Equal(expectedCount, returnedCount); 
+    }
+
+    [Fact]
+    public void GetAll_WithCreatedDateAndDueDateThisWeekFilter_ReturnsCorrectItems()
+    {
+        // Arrange
+        var now = DateTime.Now;
+        var startOfWeek = now.AddDays(-(int)now.DayOfWeek); 
+        var endOfWeek = startOfWeek.AddDays(7).AddTicks(-1); 
+
+        var todoItems = new List<TodoItem>();
+        var random = new Random();
+
+        for (int i = 0; i < 100; i++)
+        {
+            todoItems.Add(new TodoItem
+            {
+                Id = Guid.NewGuid(),
+                Title = $"Todo {i + 1}",
+                CreatedAt = now.AddDays(random.Next(-30, 7)), 
+                DueDate = now.AddDays(random.Next(-30, 7))
+            });
+        }
+
+        _todoRepositoryMock.Setup(repo => repo.GetAll()).Returns(todoItems);
+        var result = _todoController.GetAll(
+            createdFrom: startOfWeek, 
+            createdTo: endOfWeek,
+            dueFrom: startOfWeek, 
+            dueTo: endOfWeek
+        );
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var responseData = okResult.Value;
+        var propertyInfo = responseData?.GetType().GetProperty("data");
+        var returnedTodos = propertyInfo?.GetValue(responseData) as List<TodoItem>;
+        
+        Assert.NotNull(returnedTodos);
+        
+        Assert.All(returnedTodos, t =>
+        {
+
+            Assert.InRange(t.CreatedAt, startOfWeek, endOfWeek);
+            Assert.NotNull(t.DueDate);
+            Assert.InRange(t.DueDate.Value, startOfWeek, endOfWeek);
+        });
+
+        var expectedCount = todoItems.Count(t => 
+            t.CreatedAt >= startOfWeek && t.CreatedAt <= endOfWeek &&
+            t.DueDate >= startOfWeek && t.DueDate <= endOfWeek
+        );
+        
+        var countInfo = responseData?.GetType().GetProperty("count");
+        var returnedCount = countInfo?.GetValue(responseData);
+        Assert.Equal(expectedCount, returnedCount);
+    }
+
+
+    [Fact]
+    public void GetAll_WithCreatedDateDueDateAndCompletionFilter_ReturnsCorrectItems()
+    {
+        // Arrange
+        var now = DateTime.Now;
+        var startOfWeek = now.AddDays(-(int)now.DayOfWeek); 
+        var endOfWeek = startOfWeek.AddDays(7).AddTicks(-1); 
+
+        var todoItems = new List<TodoItem>();
+        var random = new Random();
+
+        for (int i = 0; i < 100; i++)
+        {
+            todoItems.Add(new TodoItem
+            {
+                Id = Guid.NewGuid(),
+                Title = $"Todo {i + 1}",
+                CreatedAt = now.AddDays(random.Next(-30, 7)), 
+                DueDate = now.AddDays(random.Next(-30, 7)),
+                IsCompleted = random.Next(2) == 1 
+            });
+        }
+
+        _todoRepositoryMock.Setup(repo => repo.GetAll()).Returns(todoItems);
+
+        var result = _todoController.GetAll(
+            createdFrom: startOfWeek, 
+            createdTo: endOfWeek,
+            dueFrom: startOfWeek, 
+            dueTo: endOfWeek,
+            isCompleted: true 
+        );
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var responseData = okResult.Value;
+        var propertyInfo = responseData?.GetType().GetProperty("data");
+        var returnedTodos = propertyInfo?.GetValue(responseData) as List<TodoItem>;
+        
+        Assert.NotNull(returnedTodos);
+        Assert.All(returnedTodos, t =>
+        {
+            Assert.InRange(t.CreatedAt, startOfWeek, endOfWeek);
+            Assert.NotNull(t.DueDate);
+            Assert.InRange(t.DueDate.Value, startOfWeek, endOfWeek);
+            Assert.True(t.IsCompleted);
+        });
+        var expectedCount = todoItems.Count(t => 
+            t.CreatedAt >= startOfWeek && t.CreatedAt <= endOfWeek &&
+            t.DueDate >= startOfWeek && t.DueDate <= endOfWeek &&
+            t.IsCompleted == true
+        );
+        
+        var countInfo = responseData?.GetType().GetProperty("count");
+        var returnedCount = countInfo?.GetValue(responseData);
+        Assert.Equal(expectedCount, returnedCount);
+    }
 }

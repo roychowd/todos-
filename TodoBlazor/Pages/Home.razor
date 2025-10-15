@@ -141,7 +141,6 @@
 @code {
     private List<TodoItem> _todos = new();
     private bool _isLoading = true;
-    private bool _isDeleting = false;
 
     // sorting
     private string _currentSortBy = "createdAt";
@@ -214,7 +213,7 @@
 
     private async Task DeleteTodoAsync(Guid id)
     {
-        _isDeleting = true;
+        _isLoading = true;
         try
         {
             await TodoService.Delete(id);
@@ -222,7 +221,7 @@
         }
         finally
         {
-            _isDeleting = false;
+            _isLoading = false;
         }
     }
 
