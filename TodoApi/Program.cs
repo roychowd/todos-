@@ -1,10 +1,10 @@
-using Microsoft.OpenApi.Models;
-using TodoApi.Models;
+using Microsoft.Extensions.FileProviders;
 using TodoApi.Repositories;
+using TodoApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Your existing services
 builder.Services.AddControllers();
 builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 builder.Services.AddCors(options =>
@@ -13,49 +13,30 @@ builder.Services.AddCors(options =>
         policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 
-// Add Swagger services
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Todo API",
-        Version = "v1",
-        Description = "A simple Todo API with filtering and sorting capabilities"
-    });
-
-    // Include XML comments if you have them
-    try
-    {
-        var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-        if (File.Exists(xmlPath))
-        {
-            c.IncludeXmlComments(xmlPath);
-        }
-    }
-    catch
-    {
-
-    }
-});
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API v1");
-        c.RoutePrefix = "swagger";
-    });
-}
-
+// Enable CORS
 app.UseCors("AllowBlazor");
-app.UseHttpsRedirection();
+
+// Serve static files from wwwroot
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "wwwroot")
+    ),
+    RequestPath = ""
+});
+
+app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
+app.UseStaticFiles(new StaticFileOptions {ServeUnknownFileTypes = true});
+
+// Fallback for Blazor routing
+app.MapFallback(context =>
+{
+    context.Response.ContentType = "text/html";
+    return context.Response.SendFileAsync(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "index.html"));
+});
 
 app.Run();

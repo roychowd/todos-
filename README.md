@@ -1,6 +1,6 @@
 # Todo Application
 
-A full-stack todo management application built with ASP.NET Core Web API and Blazor WebAssembly, featuring comprehensive filtering, sorting, and CRUD operations.
+A full-stack todo app. 
 
 ## Architecture
 
@@ -14,34 +14,34 @@ This solution consists of three main components:
 
 ### Backend (API)
 - Full CRUD operations for todo items
-- Advanced filtering (by title, completion status, due date, creation date)
 - Multiple sorting options (by title, due date, completion status, creation date)
-- Data validation and error handling
-- JSON file-based data persistence
-- Comprehensive unit test coverage
 
-### Frontend (Blazor)
-- filtering and sorting
-- Add new todos with form validation
-- Edit existing todos
-- View detailed todo information
-
-- Delete todos with confirmation
 ## Technology Stack
-
 - **Backend**: ASP.NET Core 9.0 Web API
 - **Frontend**: Blazor 
-- **Testing**: xUnit, Moq
-- **Data Storage**: JSON file-based persistence
-- **Development**: .NET 9.0
 
 ## Prerequisites
-
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - A modern web browser
 - Code editor (Visual Studio, VS Code, or Rider)
 
-## Getting Started
+### Docker Setup
+
+To run the app with docker simply run the command:
+
+```
+docker compose up --build
+```
+
+This will start the app on localhost:5000.
+
+### Required Variables
+
+- `API_BASE_URL`: The base URL for the Todo API (e.g., `http://localhost:5000`) in docker
+- `ASPNETCORE_ENVIRONMENT`: The environment name (Development, Staging, Production) // Development is Default
+
+
+## Getting Started Locally instead
 
 ### 1. Clone the Repository
 ```bash
@@ -63,14 +63,9 @@ dotnet run --project TodoApi
 dotnet run --project TodoBlazor
 ```
 
-#### Option B: Run from Visual Studio
-1. Open `TodoSolution.sln` in Visual Studio
-2. Set both `TodoApi` and `TodoBlazor` as startup projects
-3. Press F5 to run
-
 ### 4. Access the Application
 - **Frontend**: http://localhost:5221 (or the port shown in console)
-- **API**: http://localhost:5028 (or the port shown in console)
+- **API**: http://localhost:5000 (or the port shown in console)
 
 ## Project Structure
 
@@ -104,7 +99,7 @@ TodoSoln/
 └── README.md                   # This file
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Base URL: `http://localhost:5221/api/todo`
 
@@ -127,13 +122,12 @@ TodoSoln/
 - `title`: String (partial match)
 
 ### Example API Calls
-
 ```bash
 # Get all todos sorted by creation date
 GET /api/todo?sortBy=createdAt&sortOrder=desc
 
 # Get completed todos due this week
-GET /api/todo?isCompleted=true&dueFrom=2024-10-12&dueTo=2025-10-18
+GET /api/todo?isCompleted=true&dueFrom=2025-10-12&dueTo=2025-10-18
 
 # Search todos by title
 GET /api/todo?title=meeting&sortBy=dueDate
@@ -152,8 +146,10 @@ dotnet test --verbosity normal
 dotnet test TodoApi.Tests/
 ```
 
-## Data Model
 
+
+
+## Data Model
 ### TodoItem
 ```csharp
 public class TodoItem
@@ -165,4 +161,7 @@ public class TodoItem
     public bool IsCompleted { get; set; }           // Completion status
     public DateTime CreatedAt { get; set; }         // Creation timestamp
 }
-`
+```
+
+
+

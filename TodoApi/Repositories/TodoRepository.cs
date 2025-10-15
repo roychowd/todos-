@@ -15,6 +15,7 @@ namespace TodoApi.Repositories
                 Directory.CreateDirectory(directory);
         }
 
+        //  load the todos from the json file
         private List<TodoItem> Load()
         {
             if (!File.Exists(FilePath))
@@ -36,16 +37,20 @@ namespace TodoApi.Repositories
             }
         }
 
+        //  save the todos to the json file
         private void Save(List<TodoItem> todos)
         {
             var json = JsonSerializer.Serialize(todos, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(FilePath, json);
         }
 
+        //  get all the todos
         public List<TodoItem> GetAll() => Load();
 
+        //  get a todo by id
         public TodoItem? Get(Guid id) => Load().FirstOrDefault(t => t.Id == id);
 
+        //  add a todo
         public void Add(TodoItem todo)
         {
             var todos = Load();
@@ -53,6 +58,7 @@ namespace TodoApi.Repositories
             Save(todos);
         }
 
+        //  update a todo
         public void Update(TodoItem todo)
         {
             var todos = Load();
@@ -64,6 +70,7 @@ namespace TodoApi.Repositories
             }
         }
 
+        //  delete a todo
         public void Delete(Guid id)
         {
             var todos = Load().Where(t => t.Id != id).ToList();

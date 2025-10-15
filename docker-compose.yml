@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  todoapi:
+    image: todoapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./TodoApi:/src/TodoApi
+      - ./TodoBlazor:/src/TodoBlazor
+      - ./TodoApi/App_Data:/app/App_Data
+    environment:
+      - DOTNET_USE_POLLING_FILE_WATCHER=1
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - DOTNET_HOST_PATH=/usr/share/dotnet/dotnet
+      - API_BASE_URL=http://localhost:5000
+      - ASPNETCORE_ENVIRONMENT=Development
+    command: >
+      sh -c "dotnet watch run --urls=http://+:5000 --project TodoApi/TodoApi.csproj"

@@ -4,8 +4,7 @@ namespace TodoBlazor.Services
 {
     public interface ITodoService
     {
-        Task<List<TodoItem>> GetAll();
-        Task<List<TodoItem>> GetAll(string? sortBy = "createdAt", string? sortOrder = "asc");
+        //  get all todos with filtering and sorting
         Task<List<TodoItem>> GetAll(
             bool? isCompleted = null,
             DateTime? dueFrom = null,
@@ -15,6 +14,7 @@ namespace TodoBlazor.Services
             string? title = null,
             string? sortBy = "createdAt",
             string? sortOrder = "asc");
+
         Task<TodoItem> Get(Guid id);
         Task Add(TodoItem todo);
         Task Update(TodoItem todo);

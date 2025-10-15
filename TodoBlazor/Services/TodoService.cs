@@ -12,18 +12,6 @@ namespace TodoBlazor.Services
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        public async Task<List<TodoItem>> GetAll()
-        {
-            return await DeserializeTodos("api/todo");
-        }
-
-        public async Task<List<TodoItem>> GetAll(string? sortBy = "createdAt", string? sortOrder = "asc")
-        {
-            var url = $"api/todo?sortBy={sortBy}&sortOrder={sortOrder}";
-            var response = await DeserializeTodos(url);
-
-            return response;
-        }
 
         public async Task<List<TodoItem>> GetAll(
             bool? isCompleted = null,
@@ -38,6 +26,7 @@ namespace TodoBlazor.Services
             //  check for query params
             var queryParams = new List<string>();
 
+            //  add query params
             if (isCompleted.HasValue)
                 queryParams.Add($"isCompleted={isCompleted.Value.ToString().ToLower()}");
             if (dueFrom.HasValue)
@@ -51,39 +40,48 @@ namespace TodoBlazor.Services
             if (!string.IsNullOrEmpty(title))
                 queryParams.Add($"title={Uri.EscapeDataString(title)}");
 
+            //  add sort params
             queryParams.Add($"sortBy={sortBy}");
             queryParams.Add($"sortOrder={sortOrder}");
 
+            //  build url
             var url = $"api/todo?{string.Join("&", queryParams)}";
+
+            //  deserialize todos
             var response = await DeserializeTodos(url);
 
             return response;
-
         }
 
+        //  get todo by id
         public async Task<TodoItem> Get(Guid id)
         {
             return await DeserializeTodo($"api/todo/{id}");
         }
 
+        //  add todo
         public async Task Add(TodoItem todo) =>
             await http.PostAsJsonAsync("api/todo", todo);
 
+        //  update todo
         public async Task Update(TodoItem todo) =>
             await http.PutAsJsonAsync($"api/todo/{todo.Id}", todo);
 
+        //  delete todo
         public async Task Delete(Guid id) =>
             await http.DeleteAsync($"api/todo/{id}");
 
+        //  deserialize todos
         private async Task<List<TodoItem>> DeserializeTodos(string url)
         {
             var response = await http.GetFromJsonAsync<JsonElement>(url);
-            
+
             // The API returns { data: [...], count: ... }
             if (response.TryGetProperty("data", out var dataElement))
             {
-                return JsonSerializer.Deserialize<List<TodoItem>>(dataElement, Options) ?? new List<TodoItem>();
+                return dataElement.Deserialize<List<TodoItem>>(Options) ?? new List<TodoItem>();
             }
+
             return new List<TodoItem>();
         }
 

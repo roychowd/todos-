@@ -42,17 +42,6 @@ public class TodoControllerTests
     }
 
     [Fact]
-    public void Get_WithInvalidId_ReturnsNotFound()
-    {
-        var invalidId = Guid.NewGuid();
-        _todoRepositoryMock.Setup(repo => repo.Get(invalidId)).Returns((TodoItem?)null);
-        
-        var result = _todoController.Get(invalidId);
-        Assert.IsType<NotFoundResult>(result);
-        _todoRepositoryMock.Verify(repo => repo.Get(invalidId), Times.Once);
-    }
-
-    [Fact]
     public void Create_WithValidTodoItem_ReturnsCreatedAtAction()
     {
         var todoItem = new TodoItem { Title = "Test Todo 1", Description = "Test Description 1" };

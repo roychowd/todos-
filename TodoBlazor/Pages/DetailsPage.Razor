@@ -14,8 +14,8 @@
     <p>Is Completed: @todo.IsCompleted</p>
     <p>Created At: @todo.CreatedAt</p>
     <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/"))">Back</button>
-    <button class="btn btn-primary" @onclick="@(() => EditTodo())">Edit</button>
-    <button class="btn btn-primary" @onclick="@(() => DeleteTodo())">Delete</button>
+    <button class="btn btn-primary" @onclick="@(() => EditTodoAsync())">Edit</button>
+    <button class="btn btn-primary" @onclick="@(() => DeleteTodoAsync())">Delete</button>
 </div>
 
 @code {
@@ -32,15 +32,22 @@
         }
     }
 
-    private void EditTodo()
+    private async Task EditTodoAsync()
     {
-        TodoService.Update(todo);
+        await TodoService.Update(todo);
         Navigation.NavigateTo($"/edit-todo/{Id}");
     }
 
-    private void DeleteTodo()
+    private async Task DeleteTodoAsync()
     {
-        TodoService.Delete(Id);
-        Navigation.NavigateTo("/");
+        try
+        {
+            await TodoService.Delete(Id);
+            Navigation.NavigateTo("/");
+        }
+        catch
+        {
+            Console.WriteLine("Error deleting todo");
+        }
     }
 }
