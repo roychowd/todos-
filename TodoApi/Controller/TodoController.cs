@@ -5,10 +5,8 @@ namespace TodoApi.Controller;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TodoController : ControllerBase
+public class TodoController(ITodoRepository todoRepository) : ControllerBase
 {
-    private readonly TodoRepository _todoRepository = new();
-
     [HttpGet]
     public IActionResult GetAll(
         [FromQuery] bool? isCompleted = null,
@@ -23,7 +21,7 @@ public class TodoController : ControllerBase
         try
         {
             // filtering
-            var todos = _todoRepository.GetAll().AsQueryable();
+            var todos = todoRepository.GetAll().AsQueryable();
             if (isCompleted.HasValue)
                 todos = todos.Where(t => t.IsCompleted == isCompleted.Value);
             if (dueFrom.HasValue)
@@ -82,7 +80,7 @@ public class TodoController : ControllerBase
     [HttpGet("{id}")]
     public IActionResult Get(Guid id)
     {
-        var todo = _todoRepository.Get(id);
+        var todo = todoRepository.Get(id);
         if (todo == null)
         {
             return NotFound();
@@ -93,7 +91,7 @@ public class TodoController : ControllerBase
     [HttpPost]
     public IActionResult Create(TodoItem todo)
     {
-        _todoRepository.Add(todo);
+        todoRepository.Add(todo);
         return CreatedAtAction(nameof(Get), new { id = todo.Id }, todo);
     }
 
@@ -104,14 +102,14 @@ public class TodoController : ControllerBase
         {
             return BadRequest();
         }
-        _todoRepository.Update(todo);
+        todoRepository.Update(todo);
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public IActionResult Delete(Guid id)
     {
-        _todoRepository.Delete(id);
+        todoRepository.Delete(id);
         return NoContent();
     }
 }

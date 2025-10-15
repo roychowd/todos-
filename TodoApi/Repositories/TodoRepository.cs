@@ -1,8 +1,9 @@
 using System.Text.Json;
+using TodoApi.Models;
 
-namespace TodoApi.Models
+namespace TodoApi.Repositories
 {
-    public class TodoRepository
+    public class TodoRepository : ITodoRepository
     {
         private const string FilePath = "App_Data/todos_data.json";
 
