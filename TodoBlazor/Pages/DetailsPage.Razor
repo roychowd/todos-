@@ -1,0 +1,46 @@
+@page "/details/{Id:guid}"
+@using TodoApp.Models
+@using TodoBlazor.Services
+@inject ITodoService TodoService
+@inject NavigationManager Navigation
+
+<PageTitle>Todo Details</PageTitle>
+
+<div class="container mt-4">
+    <h2>Details</h2>
+    <p>Title: @todo.Title</p>
+    <p>Description: @todo.Description</p>
+    <p>Due Date: @todo.DueDate</p>
+    <p>Is Completed: @todo.IsCompleted</p>
+    <p>Created At: @todo.CreatedAt</p>
+    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/"))">Back</button>
+    <button class="btn btn-primary" @onclick="@(() => EditTodo())">Edit</button>
+    <button class="btn btn-primary" @onclick="@(() => DeleteTodo())">Delete</button>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    private TodoItem todo = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        todo = await TodoService.Get(Id);
+        if (todo == null)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    private void EditTodo()
+    {
+        TodoService.Update(todo);
+        Navigation.NavigateTo($"/edit-todo/{Id}");
+    }
+
+    private void DeleteTodo()
+    {
+        TodoService.Delete(Id);
+        Navigation.NavigateTo("/");
+    }
+}

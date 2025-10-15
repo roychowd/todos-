@@ -1,0 +1,56 @@
+@page "/add-todo"
+@using TodoBlazor.Services
+@using TodoApp.Models
+@inject ITodoService TodoService
+@inject NavigationManager Navigation
+
+<PageTitle>Add Todo</PageTitle>
+
+<div class="container mt-4">
+    <h2>Add Todo</h2>
+
+    <form @onsubmit="AddTodoAsync">
+        <div>
+            <label class="form-label">Title *</label>
+            <input class="form-control" @bind="newTodo.Title" placeholder="Enter title" required maxlength="100" />
+        </div>
+        <div>
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-control" @bind="newTodo.DueDate" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" @bind="newTodo.Description" placeholder="Optional"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 mt-3" disabled="@isAdding">
+            @if (isAdding)
+            {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+            }
+            Add
+        </button>
+    </form>
+</div>
+
+@code {
+    private TodoItem newTodo = new();
+    private bool isAdding = false;
+
+    private async Task AddTodoAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newTodo.Title)) return;
+
+        isAdding = true;
+        try
+        {
+            await TodoService.Add(newTodo);
+            // Navigate back to home page after successful add
+            Navigation.NavigateTo("/");
+        }
+        finally
+        {
+            isAdding = false;
+        }
+    }
+
+}
