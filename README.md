@@ -45,8 +45,8 @@ This will start the app on localhost:5000.
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd TodoSoln
+git clone https://github.com/roychowd/todos-.git
+cd todos-
 ```
 
 ### 2. Restore Dependencies
